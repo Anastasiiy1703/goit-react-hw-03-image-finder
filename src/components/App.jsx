@@ -15,6 +15,7 @@ class App extends Component {
     selectedImage: null,
     page: 1,
     perPage: 12,
+    hasMoreImages: true,
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -24,7 +25,7 @@ class App extends Component {
   }
 
   handleSearch = (query) => {
-    this.setState({ query, images: [], page: 1 });
+    this.setState({ query, images: [], page: 1, hasMoreImages: true });
   };
 
   fetchImages = () => {
@@ -37,8 +38,12 @@ class App extends Component {
     fetch(API_URL)
       .then((response) => response.json())
       .then((data) => {
+        const receivedImages = data.hits || [];
+        if (receivedImages.length < perPage) {
+          this.setState({ hasMoreImages: false });
+        }
         this.setState((prevState) => ({
-          images: [...prevState.images, ...data.hits],
+          images: [...prevState.images, ...receivedImages],
           isLoading: false,
           page: prevState.page + 1,
         }));
@@ -62,7 +67,7 @@ class App extends Component {
   };
 
   render() {
-    const { images, isLoading, showModal, selectedImage } = this.state;
+    const { images, isLoading, showModal, selectedImage, hasMoreImages } = this.state;
 
     return (
       <div className={AppCss.App}>
@@ -84,7 +89,7 @@ class App extends Component {
           )
         )}
 
-        {images.length > 0 && !isLoading && (
+        {images.length > 0 && !isLoading && hasMoreImages && (
           <Button onClick={this.handleLoadMore} />
         )}
 
